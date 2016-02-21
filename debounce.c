@@ -1,10 +1,16 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <string.h>
 
 #include "debounce.h"
 
 #define CLOCK_DIVISOR	10000
 #define OCR_VALUE		F_CPU / CLOCK_DIVISOR
+
+typedef enum {
+	RETURN_OK,
+	RETURN_ERROR,
+} return_code_t;
 
 /*********************************************************************
  * File global variables
@@ -24,7 +30,6 @@ volatile struct button {
 };
 
 struct button *button_list_head = NULL;
-
 
 /*********************************************************************
  * Private functions
@@ -57,18 +62,81 @@ static void init_timer(void)
 
 }
 
-static void setup_io(struct debounce_button *data)
+static return_code_t setup_io(char *button_pin, struct button *button)
 {
+
+	// Sanity checks
+	if (strlen(button_pin) != 3)
+		return RETURN_ERROR;
+	if (strstr(button_pin, "B") == NULL)
+		return RETURN_ERROR;
+
+	uint8_t pin_number = *(button_pin+2) - 0x30; // 0x30 = ASCII "0"
+	if (pin_number > 5)
+		return RETURN_ERROR;
+
+	// Set port as input with pullup
+	DDRB &= ~(1 << pin_number);
+	PORTB |= (1 << pin_number);
+	
+	// Squirrel away data
+	button->port = &PINB;
+	button->pin = pin_number; 
+
+	return RETURN_OK;
+	
+}
+
+static void add_button(struct button *button)
+
+{
+
+	struct button *tb;
+
+	if (button_list_head = NULL) {
+		button_list_head = button;
+	} else {
+		tb = get_last_button();
+		tb->next = button;
+	}
+	
+}
+
+static struct button *get_first_button(void)
+{
+
+	return button_list_head;
 
 }
 
-static void add_button_to_list(struct debounce_data *data)
+static struct button *get_last_button(void) 
 {
+
+	struct button *tb = get_first_button();
+	
+	if (tb != NULL) {
+
+		while (tb->next != NULL)
+			tb = get_next_button(tb);
+
+	}
+
+	return tb;
+
+	
+}
+
+static struct button *get_next_button(struct button *button)
+{
+
+	return button->next;
 
 }
 
-static struct button *get_next_button(void)
+static uint8_t button_is_pressed(struct button *button)
 {
+
+	return bit_is_clear(*(button->port), button->pin);
 
 }
 
@@ -80,85 +148,70 @@ static struct button *get_next_button(void)
  * called regularly and checks each button
  ******************************************************************/
 
-// TODO: adapt to multiple buttons
-
 ISR(TIM0_COMPA_vect)
 {
 
-	struct button *button;
+	struct button *button = get_first_button();
 
-	while(button = get_next_button() != NULL) {
+	while(button != NULL) {
 
 		if(button->dirty)
 			continue;
 
 		switch (button->current_debounce_count) {
 
+			// No previous presses detected
 			case 0:
 				if (button_is_pressed(button))
 					button->current_debounce_count = 1;
 				break;
 
-		}
-
-	}
-/*
-	if (button_press_acknowledged) {
-
-		switch (current_debounce_count) {
-
-			case 0:
-				if (bit_is_clear(PINB,BUTTON)) {
-					current_debounce_count = 1;
-				}
-				break;
-
+			// Possible short press
 			case DEBOUNCE_COUNT_SHORT:
-				if (bit_is_clear(PINB,BUTTON)) {
-					// Press detected
-					isr_short_press = 1;
-				}
-				current_debounce_count++;
+				if (button_is_pressed(button))
+					button->isr_short_press =1;
+				button->current_debounce_count++;
 				break;
 
+			// Halfway between possible short and long press
 			case DEBOUNCE_COUNT_MID:
-				if (isr_short_press && bit_is_set(PINB,BUTTON)) {
-					// Button no longer pressed: it's a short
-					short_press = 1;
-					button_press_acknowledged = 0;
-					current_debounce_count = 0;	
-					isr_short_press = 0;
+				if (button->isr_short_press && ! button_is_pressed(button)) {
+					// It's a short press
+					button->short_press = 1;
+					button->dirty = 1;
+					button->isr_short_press = 0;
+					button->current_debounce_count = 0;
 				} else {
-					// Button still pressed - wait for a long press
-					current_debounce_count++;
+					// Button still pressed - it could be long
+					button->current_debounce_count++;
 				}
 				break;
 
-			// If we get to this case, the button has been pressed and was still
-			// pressed at DEBOUNCE_COUNT_MID. So it is (probably) not two short
-			// presses DEBOUNCE_COUNT_LONG apart
+			// Possible long press
 			case DEBOUNCE_COUNT_LONG:
-				if (bit_is_clear(PINB,BUTTON)) {
+				if (button_is_pressed(button)) {
 					// It's a long press
-					long_press = 1;
-					button_press_acknowledged = 0;
-				} else if (isr_short_press) {
+					button->long_press = 1;
+					button->dirty = 1;	
+				} else if (button->isr_short_press) {
 					// It was a short press after all
-					short_press = 1;
-					button_press_acknowledged = 0;
+					button->short_press = 1;
+					button->dirty = 1;
 				}
-				current_debounce_count = 0;
-				isr_short_press = 0;
+				button->current_debounce_count = 0;
+				button->isr_short_press = 0;
 				break;
 
-			default:	// 1 to DEBOUNCE_COUNT_LONG-1
-				current_debounce_count++;
+			// All other cases, i.e. > 0 and < LONG_PRESS and not already covered
+			case default:
+				button->current_debounce_count++;
 				break;
-			
-				
+
 		}
+
+		button = get_next_button(button);
+
 	}
-*/
 
 }
 
@@ -167,30 +220,33 @@ ISR(TIM0_COMPA_vect)
  *********************************************************************/
 
 
-extern struct debounce_button *debounce_init(struct debounce_button *data)
+extern struct debounce_button *debounce_init(char *button_pin)
 {
 
 	
 	// Sanity check
+	if (button_pin == NULL)
+		return NULL;
 
 	// Set up new button data 
 	if (struct button *button = malloc(sizeof(struct button)) == NULL)
 		return NULL;
-
-	// Squirrel away data
-	data->private_data = (void *) button;
+	if (struct debounce_button db = malloc(sizeof(struct debounce_button)) == NULL)
+		return NULL;
+	db->private_data = button;
 
 	// Setup io for button
-	setup_io(data);
+	if (setup_io(button_pin, button) == RETURN_ERROR) 
+		return NULL;
 
 	// Start timer if necessary
 	if (button_list_head == NULL)
 		init_timer();
 
 	// Register button
-	add_button_to_list(data);
+	add_button(button);
 	
 	// Chocks away
-	return data;
+	return db;
 
 }

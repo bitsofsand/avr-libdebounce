@@ -1,11 +1,18 @@
-#define DEBOUNCE_COUNT_SHORT	10	// Number of 10ms slices after which a button press is registered as a short push
-#define DEBOUNCE_COUNT_LONG		100	// Number of 10ms slices after which a button press is registered as a long push
+/************************************************************
+ * DEBOUNCE_COUNTs
+ *
+ * Number of 10ms slices before a button press is counted as
+ * short, resp. long
+ ************************************************************/
+
+#define DEBOUNCE_COUNT_SHORT	10
+#define DEBOUNCE_COUNT_LONG		100
 #define DEBOUNCE_COUNT_MID		(DEBOUNCE_COUNT_LONG - DEBOUNCE_COUNT_SHORT) / 2 
 
+// This struct is just to have a nice name for the function
+// arguments below, instead of having to use void *
 struct debounce_button {
 
-	volatile uint8_t *port;
-	uint8_t pin;
 	void *private_data;
 
 };
@@ -16,7 +23,7 @@ typedef enum {
 	BUTTON_PRESS_LONG,
 } button_press_t;
 
-extern struct debounce_button *debounce_init(struct debounce_button *);
+extern struct debounce_button *debounce_init(char *button_pin);
 extern button_press_t button_check(struct debounce_button *);
 extern uint8_t button_acknowledge(struct debounce_button *);
 
