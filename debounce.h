@@ -1,3 +1,5 @@
+#include <stdint.h>
+
 /************************************************************
  * DEBOUNCE_COUNTs
  *
@@ -8,6 +10,10 @@
 #define DEBOUNCE_COUNT_SHORT	10
 #define DEBOUNCE_COUNT_LONG		100
 #define DEBOUNCE_COUNT_MID		(DEBOUNCE_COUNT_LONG - DEBOUNCE_COUNT_SHORT) / 2 
+
+#define CLOCK_DIVISOR	10000
+#define OCR_VALUE		F_CPU / CLOCK_DIVISOR
+
 
 /******************************************************************
  * struct debounce_button: initialisation data
@@ -22,7 +28,7 @@
  *							call button_acknowledge() explicitely
  *		void *private_data	Pointer to internal button struct
  *****************************************************************/
-extern struct debounce_button {
+struct debounce_button {
 
 	char *button_pin;
 	uint8_t auto_acknowledge_button;

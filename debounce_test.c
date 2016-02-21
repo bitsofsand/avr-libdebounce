@@ -5,24 +5,28 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
+#include <stdlib.h>
 
 void exit_error(char *message)
 {
 
 	serial_send_data(message);
 	_delay_ms(1000); // Time to write out message
-	exit 1;
+	exit(1);
 
 }
 
 int main(void)
 {
 
+	struct debounce_button *button_1;
+	struct debounce_button *button_2;
+
 	serial_initialise();
     PORTB |=(1 << PB5 | 1 << PB4 | 1 << PB3); // pullups on non used pins
 
 	// Setup button 1
-	if ((struct debounce_button *button_1 = malloc(sizeof(struct_debounce))) == NULL) 
+	if ((button_1 = malloc(sizeof(struct debounce_button))) == NULL) 
 		exit_error("Oops malloc button_1");
 	button_1->button_pin="PB0";
 	button_1->auto_acknowledge_button=0;
@@ -30,7 +34,7 @@ int main(void)
 		exit_error("Oops init button_1");
 
 	// Setup button 2
-	if ((struct debounce_button *button_2 = malloc(sizeof(struct_debounce))) == NULL) 
+	if ((button_2 = malloc(sizeof(struct debounce_button))) == NULL) 
 		exit_error("Oops malloc button_2");
 	button_2->button_pin="PB2";
 	button_2->auto_acknowledge_button=1;
@@ -43,15 +47,15 @@ int main(void)
 
 		switch(button_check(button_1)) {
 
-			case BUTTON_CHECK_NONE:
+			case BUTTON_PRESS_NONE:
 				break;
 		
-			case BUTTON_CHECK_SHORT:
+			case BUTTON_PRESS_SHORT:
 				serial_send_data("Button 1 short");
 				button_acknowledge(button_1);
 				break;
 
-			case BUTTON_CHECK_LONG:
+			case BUTTON_PRESS_LONG:
 				serial_send_data("Button 1 long. I will not ack this one");
 				// Not acknowledging -> no more button 1 presses should register
 				break;
@@ -60,14 +64,14 @@ int main(void)
 
 		switch(button_check(button_2)) {
 
-			case BUTTON_CHECK_NONE:
+			case BUTTON_PRESS_NONE:
 				break;
 		
-			case BUTTON_CHECK_SHORT:
+			case BUTTON_PRESS_SHORT:
 				serial_send_data("Button 2 short");
 				break;
 
-			case BUTTON_CHECK_LONG:
+			case BUTTON_PRESS_LONG:
 				serial_send_data("Button 2 long");
 				break;
 

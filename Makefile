@@ -26,7 +26,7 @@ FUSES      = -U lfuse:w:0xe2:m -U hfuse:w:0xdf:m -U efuse:w:0xff:m
 # Tune the lines below only if you know what you are doing:
 
 AVRDUDE = avrdude -p $(DEVICE)
-COMPILE = avr-gcc -Wall -Os -mmcu=$(DEVICE)
+COMPILE = avr-gcc -Wall -Os -mmcu=$(DEVICE) -DF_CPU=8000000
 
 # symbolic targets:
 all:	main.hex

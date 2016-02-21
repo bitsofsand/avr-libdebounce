@@ -1,11 +1,9 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "debounce.h"
-
-#define CLOCK_DIVISOR	10000
-#define OCR_VALUE		F_CPU / CLOCK_DIVISOR
 
 typedef enum {
 	RETURN_OK,
@@ -16,7 +14,7 @@ typedef enum {
  * File global variables
  *********************************************************************/
 
-volatile struct button {
+struct button {
 
 	struct button *next;
 	volatile uint8_t *port;
@@ -52,7 +50,7 @@ static void init_timer(void)
 	TCCR0A |= (1 << WGM01);
 	TCCR0B &= ~(1 << WGM02);
 
-	OCR0A = OCR_VALUE; 
+	OCR0A = (uint8_t) OCR_VALUE; 
 
 	// Enable Compare Match interrupt
 	TIMSK |= (1 << OCIE0A);
@@ -88,27 +86,20 @@ static return_code_t setup_io(char *button_pin, struct button *button)
 	
 }
 
-static void add_button(struct button *button)
-
-{
-
-	struct button *tb;
-
-	if (button_list_head = NULL) {
-		button_list_head = button;
-	} else {
-		tb = get_last_button();
-		tb->next = button;
-	}
-	
-}
-
 static struct button *get_first_button(void)
 {
 
 	return button_list_head;
 
 }
+
+static struct button *get_next_button(struct button *button)
+{
+
+	return button->next;
+
+}
+
 
 static struct button *get_last_button(void) 
 {
@@ -126,13 +117,6 @@ static struct button *get_last_button(void)
 	
 }
 
-static struct button *get_next_button(struct button *button)
-{
-
-	return button->next;
-
-}
-
 static uint8_t button_is_pressed(struct button *button)
 {
 
@@ -140,6 +124,20 @@ static uint8_t button_is_pressed(struct button *button)
 
 }
 
+static void add_button(struct button *button)
+
+{
+
+	struct button *tb;
+
+	if (button_list_head == NULL) {
+		button_list_head = button;
+	} else {
+		tb = get_last_button();
+		tb->next = button;
+	}
+	
+}
 
 /******************************************************************
  * Timer0 compare match interrupt: debounce button press
@@ -203,7 +201,7 @@ ISR(TIM0_COMPA_vect)
 				break;
 
 			// All other cases, i.e. > 0 and < LONG_PRESS and not already covered
-			case default:
+			default:
 				button->current_debounce_count++;
 				break;
 
@@ -239,12 +237,14 @@ ISR(TIM0_COMPA_vect)
 extern struct debounce_button *debounce_init(struct debounce_button *db)
 {
 	
+	struct button *button;
+
 	// Sanity check
 	if (db == NULL)
 		return NULL;
 
 	// Set up new button data 
-	if (struct button *button = malloc(sizeof(struct button)) == NULL)
+	if ((button = malloc(sizeof(struct button))) == NULL)
 		return NULL;
 	db->private_data = button;
 	button->auto_acknowledge = db->auto_acknowledge_button;
