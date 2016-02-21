@@ -25,6 +25,7 @@ volatile struct button {
 	uint8_t short_press;
 	uint8_t isr_short_press;
 	uint8_t long_press;
+	uint8_t auto_acknowledge;
 	uint8_t dirty;
 	
 };
@@ -122,7 +123,6 @@ static struct button *get_last_button(void)
 	}
 
 	return tb;
-
 	
 }
 
@@ -219,24 +219,38 @@ ISR(TIM0_COMPA_vect)
  * Public functions
  *********************************************************************/
 
+/*********************************************************************
+ * debounce_init: setup a button for debouncing
+ *
+ * Parameters
+ *		struct debounce_button *db
+ *			See struct debounce_button
+ * Returns
+ *		struct debounce_button *db
+ *			Returns the argument, with extra data filled in. Use this
+ *			as argument to following function calls
+ * 
+ * This library expects the button to pull the pin to GND. 
+ *
+ * This function will setup the I/O direction & pull up resistor for
+ * the pin and then start watching the pin for button presses
+ *********************************************************************/
 
-extern struct debounce_button *debounce_init(char *button_pin)
+extern struct debounce_button *debounce_init(struct debounce_button *db)
 {
-
 	
 	// Sanity check
-	if (button_pin == NULL)
+	if (db == NULL)
 		return NULL;
 
 	// Set up new button data 
 	if (struct button *button = malloc(sizeof(struct button)) == NULL)
 		return NULL;
-	if (struct debounce_button db = malloc(sizeof(struct debounce_button)) == NULL)
-		return NULL;
 	db->private_data = button;
+	button->auto_acknowledge = db->auto_acknowledge_button;
 
 	// Setup io for button
-	if (setup_io(button_pin, button) == RETURN_ERROR) 
+	if (setup_io(db->button_pin, button) == RETURN_ERROR) 
 		return NULL;
 
 	// Start timer if necessary
@@ -250,3 +264,57 @@ extern struct debounce_button *debounce_init(char *button_pin)
 	return db;
 
 }
+
+/*********************************************************************
+ * button_check: check whether a button has been pressed
+ *
+ * Parameters:
+ *		struct debounce_button *db - The button to check
+ *					This is what the debounce_init function returns
+ * Returns:
+ *		button_press_t result: 
+ *			One of BUTTON_PRESS_NONE, BUTTON_PRESS_SHORT or 
+ *			BUTTON_PRESS_LONG
+ *********************************************************************/
+
+extern button_press_t button_check(struct debounce_button *db)
+{
+
+	struct button *button = (struct button *) db->private_data;
+
+	button_press_t result = BUTTON_PRESS_NONE;
+
+	if (button->short_press)
+		result = BUTTON_PRESS_SHORT;
+
+	if (button->long_press)
+		result = BUTTON_PRESS_LONG;
+
+	if (result != BUTTON_PRESS_NONE && button->auto_acknowledge)
+		button->dirty = 0;
+		
+	return result;
+
+}
+
+/*********************************************************************
+ * button_acknowledge: acknowledge that you read the button status
+ *
+ * Parameters:
+ *		struct debounce_button *db - The button to check
+ *					This is what the debounce_init function returns
+ *
+ * This function will acknowledge a button press. While a button press
+ * is not acknowledged, the library will not check its status, so this
+ * acts as a lock on the button. If auto_acknowledge_button was set,
+ * this need not be called explicitely
+ *********************************************************************/
+extern void button_acknowledge(struct debounce_button *db)
+{
+	
+	struct button *button = (struct button *) db->private_data;
+	button->dirty = 0;
+
+}
+
+
