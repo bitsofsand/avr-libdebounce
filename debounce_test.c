@@ -22,13 +22,18 @@ int main(void)
 	struct debounce_button *button_1;
 	struct debounce_button *button_2;
 
+	char *pin_1 = malloc(4);
+	char *pin_2 = malloc(4);
+	strcpy(pin_1, "PB0");
+	strcpy(pin_2, "PB2");
+
 	serial_initialise();
     PORTB |=(1 << PB5 | 1 << PB4 | 1 << PB3); // pullups on non used pins
 
 	// Setup button 1
 	if ((button_1 = malloc(sizeof(struct debounce_button))) == NULL) 
 		exit_error("Oops malloc button_1");
-	button_1->button_pin="PB0";
+	button_1->button_pin=pin_1;
 	button_1->auto_acknowledge_button=0;
 	if ((button_1 = debounce_init(button_1)) == NULL) 
 		exit_error("Oops init button_1");
@@ -36,7 +41,7 @@ int main(void)
 	// Setup button 2
 	if ((button_2 = malloc(sizeof(struct debounce_button))) == NULL) 
 		exit_error("Oops malloc button_2");
-	button_2->button_pin="PB2";
+	button_2->button_pin=pin_2;
 	button_2->auto_acknowledge_button=1;
 	if ((button_2 = debounce_init(button_2)) == NULL) 
 		exit_error("Oops init button_1");
