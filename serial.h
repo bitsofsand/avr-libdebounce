@@ -12,7 +12,7 @@
 #define SERIAL_SPEED_115200	5
 
 #define	TX_PORT						PORTB
-#define TX_PIN						PB1
+#define TX_PIN						PB4
 #define SERIAL_SPEED				SERIAL_SPEED_9600
 #define RX_BUFFER_SIZE				64			// In bytes
 #define TX_BUFFER_SIZE				64			// In bytes

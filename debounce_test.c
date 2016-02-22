@@ -29,7 +29,12 @@ int main(void)
 	strcpy(pin_2, "PB2");
 
 	serial_initialise();
-    PORTB |=(1 << PB5 | 1 << PB4 | 1 << PB3); // pullups on non used pins
+
+    PORTB |=(1 << PB5); // pullups on non used pins
+
+	DDRB |= (1 << PB3);
+
+	serial_send_data("Canary");
 
 	// Setup button 1
 	if ((button_1 = malloc(sizeof(struct debounce_button))) == NULL) 
@@ -51,6 +56,7 @@ int main(void)
 
 	while (1) {
 
+/*
 		switch(button_check(button_1)) {
 
 			case BUTTON_PRESS_NONE:
@@ -82,8 +88,9 @@ int main(void)
 				break;
 
 		}
-
-		_delay_ms(100);
+*/
+		serial_send_data("Canary");
+		_delay_ms(500);
 
 	}	
 

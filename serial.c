@@ -411,6 +411,9 @@ ISR(TIM1_COMPA_vect)
 
 			} else if (connection_state_is(SERIAL_SENDING_DATA)) {
 
+		// Canary
+		PORTB ^= (1 << PB3);
+
 				// Data or stop bit
 				if (tx_bit_counter == 8) {
 
@@ -645,6 +648,7 @@ extern uint16_t serial_send_data(char *data)
 
 	uint16_t data_length = strlen(data);
 	uint16_t i;
+
 
 	for (i = 0; i < data_length; i++) {
 
