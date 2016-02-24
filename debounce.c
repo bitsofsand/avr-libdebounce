@@ -32,7 +32,6 @@ struct button {
 	uint8_t isr_short_press;
 	uint8_t long_press;
 	uint8_t auto_acknowledge;
-	uint8_t dirty;
 	
 };
 
@@ -161,8 +160,11 @@ ISR(TIM0_COMPA_vect)
 
 	while(button != NULL) {
 
-		if(button->dirty)
+		// Don't check this button if not acknowledged yet
+		if(button->short_press || button->long_press) {
+			button = get_next_button(button);
 			continue;
+		}		
 
 		switch (button->current_debounce_count) {
 
@@ -175,7 +177,7 @@ ISR(TIM0_COMPA_vect)
 			// Possible short press
 			case DEBOUNCE_COUNT_SHORT:
 				if (button_is_pressed(button))
-					button->isr_short_press =1;
+					button->isr_short_press = 1;
 				button->current_debounce_count++;
 				break;
 
@@ -184,7 +186,6 @@ ISR(TIM0_COMPA_vect)
 				if (button->isr_short_press && ! button_is_pressed(button)) {
 					// It's a short press
 					button->short_press = 1;
-					button->dirty = 1;
 					button->isr_short_press = 0;
 					button->current_debounce_count = 0;
 				} else {
@@ -198,11 +199,9 @@ ISR(TIM0_COMPA_vect)
 				if (button_is_pressed(button)) {
 					// It's a long press
 					button->long_press = 1;
-					button->dirty = 1;	
 				} else if (button->isr_short_press) {
 					// It was a short press after all
 					button->short_press = 1;
-					button->dirty = 1;
 				}
 				button->current_debounce_count = 0;
 				button->isr_short_press = 0;
@@ -258,7 +257,6 @@ extern void *debounce_init(char *pin)
 	button->short_press = 0;
 	button->long_press = 0;
 	button->isr_short_press = 0;
-	button->dirty = 0;
 	button->auto_acknowledge = 0;
 
 	// Setup io for button
@@ -296,14 +294,16 @@ extern button_press_t button_check(button_t param)
 
 	button_press_t result = BUTTON_PRESS_NONE;
 
-	if (button->short_press)
+	if (button->short_press) 
 		result = BUTTON_PRESS_SHORT;
 
 	if (button->long_press)
 		result = BUTTON_PRESS_LONG;
 
-	if (result != BUTTON_PRESS_NONE && button->auto_acknowledge)
-		button->dirty = 0;
+	if (result != BUTTON_PRESS_NONE && button->auto_acknowledge) {
+		button->long_press = 0;
+		button->short_press = 0;
+	}
 		
 	return result;
 
@@ -325,7 +325,8 @@ extern void button_acknowledge(button_t param)
 {
 	
 	struct button *button = (struct button *) param;
-	button->dirty = 0;
+	button->short_press = 0;
+	button->long_press = 0;
 
 }
 

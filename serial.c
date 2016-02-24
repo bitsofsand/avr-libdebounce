@@ -411,9 +411,6 @@ ISR(TIM1_COMPA_vect)
 
 			} else if (connection_state_is(SERIAL_SENDING_DATA)) {
 
-		// Canary
-		PORTB ^= (1 << PB3);
-
 				// Data or stop bit
 				if (tx_bit_counter == 8) {
 

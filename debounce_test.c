@@ -16,8 +16,6 @@
 int main(void)
 {
 	
-	DDRB |= (1 << PB1 | 1 << PB3);
-
 	serial_initialise();
 
 	button_t button_1 = debounce_init("PB0");
@@ -30,13 +28,19 @@ int main(void)
 	
     while (1) 
     {
-		
+
 		if(button_check(button_1) == BUTTON_PRESS_SHORT) {
-			PORTB ^= (1 << PB1);
+			serial_send_data("Button 1 short");
+			button_acknowledge(button_1);
 		}
 
+		if(button_check(button_1) == BUTTON_PRESS_LONG) {
+			serial_send_data("Button 1 long");
+			button_acknowledge(button_1);
+		}
+		
    		if(button_check(button_2) == BUTTON_PRESS_SHORT) {
-			PORTB ^= (1 << PB1);
+			serial_send_data("Button 2 short");
 		}
 
 		_delay_ms(200);
