@@ -27,27 +27,6 @@
 
 typedef void * button_t;
 
-/******************************************************************
- * struct debounce_button: initialisation data
- *
- * Members:
- *		char *button_pin	The pin the button is connected to
- *							Use Pxx format, eg PB0
- *		uint8_t auto_acknowledge_button
- *							Set this to >0 to have button_check()
- *							automatically acknowledge the button
- *							read. If set to 0, you will need to
- *							call button_acknowledge() explicitely
- *		void *private_data	Pointer to internal button struct
- *****************************************************************/
-struct debounce_button {
-
-	char *button_pin;
-	uint8_t auto_acknowledge_button;
-	void *private_data;
-
-};
-
 typedef enum {
 	BUTTON_PRESS_NONE,
 	BUTTON_PRESS_SHORT,
