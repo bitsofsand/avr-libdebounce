@@ -40,12 +40,14 @@ int main(void)
 			button_acknowledge(button_1);
 		}
 		
-   		if(button_check(button_2) == BUTTON_PRESS_SHORT) {
-			serial_send_data("Button 2 short");
-		}
+		switch (button_check(button_2)) {
+			case BUTTON_PRESS_SHORT:	
+				serial_send_data("Button 2 short");
+				break;
 
-		if(button_check(button_2) == BUTTON_PRESS_LONG) {
-			serial_send_data("Button 2 long");
+			case BUTTON_PRESS_LONG:
+				serial_send_data("Button 2 long");
+				break;
 		}
 		
 		_delay_ms(200);
