@@ -58,7 +58,7 @@ static void init_timer(void)
 	TCCR0A |= (1 << WGM01);
 	TCCR0B &= ~(1 << WGM02);
 
-	OCR0A = (uint8_t) OCR_VALUE; 
+	OCR0A = OCR_VALUE; 
 
 	// Enable Compare Match interrupt
 	TIMSK |= (1 << OCIE0A);
@@ -273,7 +273,7 @@ extern void *debounce_init(char *pin)
 	add_button(button);
 	
 	// Chocks away
-	return (void *) button;
+	return (button_t) button;
 
 }
 

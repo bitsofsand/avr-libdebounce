@@ -23,8 +23,7 @@
 #define DEBOUNCE_COUNT_LONG		100
 #define DEBOUNCE_COUNT_MID		(DEBOUNCE_COUNT_LONG - DEBOUNCE_COUNT_SHORT) / 2 
 
-#define CLOCK_DIVISOR	10000
-#define OCR_VALUE		F_CPU / CLOCK_DIVISOR
+#define OCR_VALUE		80 // Hardcoded for 8 MHz, results in 10ms slices
 
 typedef void * button_t;
 
