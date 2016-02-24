@@ -1,3 +1,11 @@
+/*
+ * debounce.c
+ *
+ * Created: 24/02/2016 10:14:18
+ * Author : robartes
+ */ 
+
+
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <string.h>
@@ -234,23 +242,27 @@ ISR(TIM0_COMPA_vect)
  * the pin and then start watching the pin for button presses
  *********************************************************************/
 
-extern struct debounce_button *debounce_init(struct debounce_button *db)
+extern void *debounce_init(char *pin)
 {
 	
 	struct button *button;
 
-	// Sanity check
-	if (db == NULL)
-		return NULL;
 
 	// Set up new button data 
 	if ((button = malloc(sizeof(struct button))) == NULL)
 		return NULL;
-	db->private_data = button;
-	button->auto_acknowledge = db->auto_acknowledge_button;
+
+	button->next = NULL;
+	button->port = NULL;
+	button->current_debounce_count = 0;
+	button->short_press = 0;
+	button->long_press = 0;
+	button->isr_short_press = 0;
+	button->dirty = 0;
+	button->auto_acknowledge = 0;
 
 	// Setup io for button
-	if (setup_io(db->button_pin, button) == RETURN_ERROR) 
+	if (setup_io(pin, button) == RETURN_ERROR) 
 		return NULL;
 
 	// Start timer if necessary
@@ -261,7 +273,7 @@ extern struct debounce_button *debounce_init(struct debounce_button *db)
 	add_button(button);
 	
 	// Chocks away
-	return db;
+	return (void *) button;
 
 }
 
@@ -277,10 +289,10 @@ extern struct debounce_button *debounce_init(struct debounce_button *db)
  *			BUTTON_PRESS_LONG
  *********************************************************************/
 
-extern button_press_t button_check(struct debounce_button *db)
+extern button_press_t button_check(void *param)
 {
 
-	struct button *button = (struct button *) db->private_data;
+	struct button *button = (struct button *) param;
 
 	button_press_t result = BUTTON_PRESS_NONE;
 
@@ -309,10 +321,10 @@ extern button_press_t button_check(struct debounce_button *db)
  * acts as a lock on the button. If auto_acknowledge_button was set,
  * this need not be called explicitely
  *********************************************************************/
-extern void button_acknowledge(struct debounce_button *db)
+extern void button_acknowledge(void *param)
 {
 	
-	struct button *button = (struct button *) db->private_data;
+	struct button *button = (struct button *) param;
 	button->dirty = 0;
 
 }

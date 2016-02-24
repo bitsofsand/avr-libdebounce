@@ -1,3 +1,15 @@
+/*
+ * debounce.h
+ *
+ * Created: 24/02/2016 10:15:35
+ *  Author: robartes
+ */ 
+
+
+#ifndef DEBOUNCE_H_
+#define DEBOUNCE_H_
+
+
 #include <stdint.h>
 
 /************************************************************
@@ -14,6 +26,7 @@
 #define CLOCK_DIVISOR	10000
 #define OCR_VALUE		F_CPU / CLOCK_DIVISOR
 
+typedef void * button_t;
 
 /******************************************************************
  * struct debounce_button: initialisation data
@@ -59,7 +72,7 @@ typedef enum {
  * This function will setup the I/O direction & pull up resistor for
  * the pin and then start watching the pin for button presses
  *********************************************************************/
-extern struct debounce_button *debounce_init(struct debounce_button *);
+extern button_t debounce_init(char *);
 
 /*********************************************************************
  * button_check: check whether a button has been pressed
@@ -76,7 +89,7 @@ extern struct debounce_button *debounce_init(struct debounce_button *);
  * acknowledge a button press if auto_acknowledge_button was set
  *********************************************************************/
 
-extern button_press_t button_check(struct debounce_button *);
+extern button_press_t button_check(button_t);
 
 /*********************************************************************
  * button_acknowledge: acknowledge that you read the button status
@@ -90,6 +103,10 @@ extern button_press_t button_check(struct debounce_button *);
  * acts as a lock on the button. If auto_acknowledge_button was set,
  * this need not be called explicitely
  *********************************************************************/
-extern void button_acknowledge(struct debounce_button *);
+extern void button_acknowledge(button_t);
 
 
+
+
+
+#endif /* DEBOUNCE_H_ */

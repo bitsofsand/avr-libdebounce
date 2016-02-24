@@ -1,98 +1,35 @@
-#define F_CPU 8000000
-
-#include "debounce.h"
-#include "serial.h"
+/*
+ * PWM_remote_AS.c
+ *
+ * Created: 23/02/2016 22:31:50
+ * Author : robartes
+ */ 
 
 #include <avr/io.h>
-#include <util/delay.h>
+#include <avr/interrupt.h>
 #include <stdlib.h>
 #include <string.h>
-
-void exit_error(char *message)
-{
-
-	serial_send_data(message);
-	_delay_ms(1000); // Time to write out message
-	exit(1);
-
-}
+#include "debounce.h"
 
 int main(void)
 {
+    /* Replace with your application code */
+	
 
-	struct debounce_button *button_1;
-	struct debounce_button *button_2;
-
-	char *pin_1 = malloc(4);
-	char *pin_2 = malloc(4);
-	strcpy(pin_1, "PB0");
-	strcpy(pin_2, "PB2");
-
-	serial_initialise();
-
-    PORTB |=(1 << PB5); // pullups on non used pins
-
-	DDRB |= (1 << PB3);
-
-	serial_send_data("Canary");
-
-	// Setup button 1
-	if ((button_1 = malloc(sizeof(struct debounce_button))) == NULL) 
-		exit_error("Oops malloc button_1");
-	button_1->button_pin=pin_1;
-	button_1->auto_acknowledge_button=0;
-	if ((button_1 = debounce_init(button_1)) == NULL) 
-		exit_error("Oops init button_1");
-
-	// Setup button 2
-	if ((button_2 = malloc(sizeof(struct debounce_button))) == NULL) 
-		exit_error("Oops malloc button_2");
-	button_2->button_pin=pin_2;
-	button_2->auto_acknowledge_button=1;
-	if ((button_2 = debounce_init(button_2)) == NULL) 
-		exit_error("Oops init button_1");
-
-	serial_send_data("Ready. Start pressing buttons");
-
-	while (1) {
-
-/*
-		switch(button_check(button_1)) {
-
-			case BUTTON_PRESS_NONE:
-				break;
+	button_t button_1 = debounce_init("PB0");
+	button_t button_2 = debounce_init("PB2");
+	
+	
+	sei();
+	
+    while (1) 
+    {
 		
-			case BUTTON_PRESS_SHORT:
-				serial_send_data("Button 1 short");
-				button_acknowledge(button_1);
-				break;
-
-			case BUTTON_PRESS_LONG:
-				serial_send_data("Button 1 long. I will not ack this one");
-				// Not acknowledging -> no more button 1 presses should register
-				break;
-
+		if(button_check(button_1) == BUTTON_PRESS_SHORT) {
+			DDRB |= (1 << PB1);
+			PORTB |= (1 << PB1);
+				
 		}
-
-		switch(button_check(button_2)) {
-
-			case BUTTON_PRESS_NONE:
-				break;
-		
-			case BUTTON_PRESS_SHORT:
-				serial_send_data("Button 2 short");
-				break;
-
-			case BUTTON_PRESS_LONG:
-				serial_send_data("Button 2 long");
-				break;
-
-		}
-*/
-		serial_send_data("Canary");
-		_delay_ms(500);
-
-	}	
-
-		
+    }
 }
+
