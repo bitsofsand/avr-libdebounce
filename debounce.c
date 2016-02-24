@@ -289,7 +289,7 @@ extern void *debounce_init(char *pin)
  *			BUTTON_PRESS_LONG
  *********************************************************************/
 
-extern button_press_t button_check(void *param)
+extern button_press_t button_check(button_t param)
 {
 
 	struct button *button = (struct button *) param;
@@ -321,7 +321,7 @@ extern button_press_t button_check(void *param)
  * acts as a lock on the button. If auto_acknowledge_button was set,
  * this need not be called explicitely
  *********************************************************************/
-extern void button_acknowledge(void *param)
+extern void button_acknowledge(button_t param)
 {
 	
 	struct button *button = (struct button *) param;
