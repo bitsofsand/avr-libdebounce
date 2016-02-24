@@ -32,6 +32,7 @@ struct button {
 	uint8_t isr_short_press;
 	uint8_t long_press;
 	uint8_t auto_acknowledge;
+	uint8_t dead_time_counter;
 	
 };
 
@@ -166,6 +167,13 @@ ISR(TIM0_COMPA_vect)
 			continue;
 		}		
 
+		// Don't check this button if we are in dead time
+		if(button->dead_time_counter) {
+			button->dead_time_counter--;
+			button = get_next_button(button);
+			continue;
+		}
+
 		switch (button->current_debounce_count) {
 
 			// No previous presses detected
@@ -186,6 +194,7 @@ ISR(TIM0_COMPA_vect)
 				if (button->isr_short_press && ! button_is_pressed(button)) {
 					// It's a short press
 					button->short_press = 1;
+					button->dead_time_counter = DEBOUNCE_DEAD_TIME_SHORT;
 					button->isr_short_press = 0;
 					button->current_debounce_count = 0;
 				} else {
@@ -199,9 +208,11 @@ ISR(TIM0_COMPA_vect)
 				if (button_is_pressed(button)) {
 					// It's a long press
 					button->long_press = 1;
+					button->dead_time_counter = DEBOUNCE_DEAD_TIME_LONG;
 				} else if (button->isr_short_press) {
 					// It was a short press after all
 					button->short_press = 1;
+					button->dead_time_counter = DEBOUNCE_DEAD_TIME_SHORT;
 				}
 				button->current_debounce_count = 0;
 				button->isr_short_press = 0;
@@ -258,6 +269,7 @@ extern void *debounce_init(char *pin)
 	button->long_press = 0;
 	button->isr_short_press = 0;
 	button->auto_acknowledge = 0;
+	button->dead_time_counter = 0;
 
 	// Setup io for button
 	if (setup_io(pin, button) == RETURN_ERROR) 

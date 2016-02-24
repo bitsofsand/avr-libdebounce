@@ -17,11 +17,15 @@
  *
  * Number of 10ms slices before a button press is counted as
  * short, resp. long
+ * Dead time is number of 10ms slices after a press detection
+ * to not check the button
  ************************************************************/
 
 #define DEBOUNCE_COUNT_SHORT	10
 #define DEBOUNCE_COUNT_LONG		100
 #define DEBOUNCE_COUNT_MID		(DEBOUNCE_COUNT_LONG - DEBOUNCE_COUNT_SHORT) / 2 
+#define DEBOUNCE_DEAD_TIME_SHORT	50 	// 0.5 sec
+#define DEBOUNCE_DEAD_TIME_LONG		250 	// 2.5 sec
 
 #define OCR_VALUE		80 // Hardcoded for 8 MHz, results in 10ms slices
 
