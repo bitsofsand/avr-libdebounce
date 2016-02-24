@@ -44,6 +44,10 @@ int main(void)
 			serial_send_data("Button 2 short");
 		}
 
+		if(button_check(button_2) == BUTTON_PRESS_LONG) {
+			serial_send_data("Button 2 long");
+		}
+		
 		_delay_ms(200);
 
 		serial_send_data("Canary\r\n");

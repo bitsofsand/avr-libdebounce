@@ -306,17 +306,18 @@ extern button_press_t button_check(button_t param)
 
 	button_press_t result = BUTTON_PRESS_NONE;
 
-	if (button->short_press) 
+	if (button->short_press) {
 		result = BUTTON_PRESS_SHORT;
-
-	if (button->long_press)
-		result = BUTTON_PRESS_LONG;
-
-	if (result != BUTTON_PRESS_NONE && button->auto_acknowledge) {
-		button->long_press = 0;
-		button->short_press = 0;
+		if (button->auto_acknowledge)
+			button->short_press = 0;
 	}
-		
+
+	if (button->long_press) {
+		result = BUTTON_PRESS_LONG;
+		if (button->auto_acknowledge)
+			button->long_press = 0;
+	}
+
 	return result;
 
 }
