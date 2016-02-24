@@ -342,4 +342,10 @@ extern void button_acknowledge(button_t param)
 
 }
 
+extern void button_auto_acknowledge(button_t param)
+{
 
+	struct button *button = (struct button *) param;
+	button->auto_acknowledge = 1;
+
+}

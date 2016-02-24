@@ -21,6 +21,7 @@ int main(void)
 	button_t button_1 = debounce_init("PB0");
 	button_t button_2 = debounce_init("PB2");
 	
+	button_auto_acknowledge(button_2);
 	
 	sei();
 

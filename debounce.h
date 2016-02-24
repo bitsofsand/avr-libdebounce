@@ -87,7 +87,7 @@ extern button_press_t button_check(button_t);
  *********************************************************************/
 extern void button_acknowledge(button_t);
 
-
+extern void button_auto_acknowledge(button_t);
 
 
 
