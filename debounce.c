@@ -239,12 +239,13 @@ ISR(TIM0_COMPA_vect)
  * debounce_init: setup a button for debouncing
  *
  * Parameters
- *		struct debounce_button *db
- *			See struct debounce_button
+ *		char * button_pin
+ *			Pin the button is connected to. Use standard
+ *			AVR naming, e.g. "PB0"
  * Returns
- *		struct debounce_button *db
- *			Returns the argument, with extra data filled in. Use this
- *			as argument to following function calls
+ *		button_t button
+ *			Opaque data structure to be used in further
+ *			calls in this library
  * 
  * This library expects the button to pull the pin to GND. 
  *
@@ -252,7 +253,7 @@ ISR(TIM0_COMPA_vect)
  * the pin and then start watching the pin for button presses
  *********************************************************************/
 
-extern void *debounce_init(char *pin)
+extern button_t debounce_init(char *pin)
 {
 	
 	struct button *button;
@@ -291,12 +292,15 @@ extern void *debounce_init(char *pin)
  * button_check: check whether a button has been pressed
  *
  * Parameters:
- *		struct debounce_button *db - The button to check
- *					This is what the debounce_init function returns
+ * 		button_t button
+ * 			The button to check
  * Returns:
  *		button_press_t result: 
  *			One of BUTTON_PRESS_NONE, BUTTON_PRESS_SHORT or 
  *			BUTTON_PRESS_LONG
+ *
+ * This function will, apart from returning the button state, also
+ * acknowledge a button press if auto_acknowledge_button was set
  *********************************************************************/
 
 extern button_press_t button_check(button_t param)
@@ -326,14 +330,15 @@ extern button_press_t button_check(button_t param)
  * button_acknowledge: acknowledge that you read the button status
  *
  * Parameters:
- *		struct debounce_button *db - The button to check
- *					This is what the debounce_init function returns
+ * 		button_t button
+ * 			The button to acknowledge
  *
  * This function will acknowledge a button press. While a button press
  * is not acknowledged, the library will not check its status, so this
  * acts as a lock on the button. If auto_acknowledge_button was set,
  * this need not be called explicitely
  *********************************************************************/
+
 extern void button_acknowledge(button_t param)
 {
 	
@@ -342,6 +347,18 @@ extern void button_acknowledge(button_t param)
 	button->long_press = 0;
 
 }
+
+/*********************************************************************
+ * button_auto_acknowledge: set a button to auto-acknowledge checks
+ *
+ * Parameters:
+ * 		button_t button
+ * 			The button to auto acknowledge
+ *
+ * This will set up the button to auto acknowledge checks. When 
+ * button_check is called for a button with auto_acknowledge set, that
+ * will immediately acknowledge the button
+ *********************************************************************/
 
 extern void button_auto_acknowledge(button_t param)
 {
