@@ -77,3 +77,7 @@ disasm:	main.elf
 
 cpp:
 	$(COMPILE) -E main.c
+
+# Target to build library
+lib: debounce.o
+	avr-ar rc libdebounce.a debounce.o
